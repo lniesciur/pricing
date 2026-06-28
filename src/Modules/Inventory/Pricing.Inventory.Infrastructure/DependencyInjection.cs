@@ -13,7 +13,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInventoryInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<InventoryDbContext>(o =>
-            o.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            o.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IInventoryUnitOfWork, InventoryUnitOfWork>();
         services.AddScoped<IDomainEventDispatcher, NullDomainEventDispatcher>();

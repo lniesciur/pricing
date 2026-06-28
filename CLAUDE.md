@@ -1,6 +1,6 @@
 # Pricing
 
-Modularny monolit — .NET 10, FastEndpoints, PostgreSQL.
+Modularny monolit — .NET 10, FastEndpoints, SQL Server.
 
 ## Commands
 
@@ -153,7 +153,7 @@ Domyślnie: `NullDomainEventDispatcher` (no-op). Podmień na prawdziwą implemen
 - Per-warstwo unit testy per moduł: `tests/Pricing.{Module}.{Domain,Application}.UnitTests`
   - `*.Domain.UnitTests` referuje tylko `*.Domain`
   - `*.Application.UnitTests` referuje `*.Application` (i transytywnie `*.Domain`)
-- Integracyjne: `tests/Pricing.IntegrationTests` — Testcontainers PostgreSQL, `WebApplicationFactory<Program>`
+- Integracyjne: `tests/Pricing.IntegrationTests` — Testcontainers SQL Server (`mcr.microsoft.com/mssql/server:2022-latest`), `WebApplicationFactory<Program>`
 - Mocking: **NSubstitute**
 - Nazewnictwo testów: `MethodName_WhenCondition_ExpectedOutcome`
 - Failure: `Assert.False(result.IsSuccess)` + `DidNotReceive`
@@ -165,7 +165,7 @@ Specyfikacje funkcji w `_docs/adr/` (decyzje architektoniczne) i `_specs/active/
 
 ## Known Gotchas
 
-- Migracje wymagają **portu 5432** (direct connection) — port 6543 (transaction pooler) psuje DDL
+- Connection string musi zawierać `TrustServerCertificate=True` w środowiskach dev/CI (self-signed cert SQL Server)
 - `ConnectionStrings__DefaultConnection` env var musi być ustawiony przed `dotnet ef database update` w CI
 - Never commit credentials — używaj `dotnet user-secrets` lokalnie
 - FastEndpoints skanuje wszystkie załadowane assembly automatycznie — wystarczy że `*.Api` jest referencją `Pricing.Api`

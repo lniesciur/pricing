@@ -32,5 +32,4 @@ dotnet ef database update \
 
 2. Confirm output ends with `Done.` — if not, report the error to the user.
 
-3. Remind the user: migrations require a **direct connection on port 5432**.
-   Port 6543 (Supabase transaction pooler) breaks DDL statements.
+3. Remind the user: the connection string must include `TrustServerCertificate=True` in dev/CI environments.
