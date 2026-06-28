@@ -26,7 +26,13 @@ jobs:
         run: dotnet build Pricing.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Pricing.slnx --no-build --configuration Release --verbosity normal --logger trx --results-directory ./test-results
+        run: |
+          find tests -name "*.csproj" | while read proj; do
+            name=$(basename "$proj" .csproj)
+            dotnet test "$proj" --no-build --configuration Release --verbosity normal \
+              --logger "trx;LogFileName=${name}.trx" \
+              --results-directory ./test-results
+          done
 
       - name: Test Report
         uses: dorny/test-reporter@v1
