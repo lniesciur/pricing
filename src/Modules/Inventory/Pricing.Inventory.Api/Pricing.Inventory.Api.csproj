@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="8.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Pricing.Inventory.Contracts/Pricing.Inventory.Contracts.csproj" />
+    <ProjectReference Include="../Pricing.Inventory.Infrastructure/Pricing.Inventory.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

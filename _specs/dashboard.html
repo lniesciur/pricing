@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    :root {
+      --font-sans: system-ui, -apple-system, sans-serif;
+      --font-mono: ui-monospace, 'Cascadia Code', monospace;
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f5f4;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-border-tertiary: rgba(0,0,0,0.1);
+      --color-border-secondary: rgba(0,0,0,0.2);
+      --color-border-info: #185fa5;
+      --color-background-info: #e6f1fb;
+      --color-text-info: #0c447c;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1e1e1c;
+        --color-background-secondary: #2a2a28;
+        --color-text-primary: #e8e6de;
+        --color-text-secondary: #a09e96;
+        --color-text-tertiary: #6a6860;
+        --color-border-tertiary: rgba(255,255,255,0.08);
+        --color-border-secondary: rgba(255,255,255,0.16);
+        --color-background-info: #0c2a44;
+        --color-text-info: #85b7eb;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-background-secondary);
+      color: var(--color-text-primary);
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .toolbar-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      flex: 1;
+      min-width: 120px;
+    }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .stat span { font-weight: 500; color: var(--color-text-primary); }
+    .drop-zone {
+      border: 1.5px dashed var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: background .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .drop-zone:hover { background: var(--color-background-primary); }
+    .drop-zone.active { background: var(--color-background-info); border-color: var(--color-border-info); color: var(--color-text-info); }
+    .file-input { display: none; }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 700px) {
+      .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 420px) {
+      .board { grid-template-columns: 1fr; }
+    }
+    .col {
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-lg);
+      padding: 12px;
+      min-height: 160px;
+    }
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .col-title {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--color-text-secondary);
+    }
+    .col-count {
+      font-size: 11px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: 20px;
+      padding: 1px 7px;
+      color: var(--color-text-tertiary);
+    }
+    .cards { display: flex; flex-direction: column; gap: 8px; }
+    .card {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      padding: 10px 12px;
+      transition: border-color .15s;
+    }
+    .card:hover { border-color: var(--color-border-secondary); }
+    .card-id {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--color-text-tertiary);
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+    .card-meta {
+      font-size: 11px;
+      color: var(--color-text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .card-branch {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: var(--color-background-secondary);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--color-text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 160px;
+    }
+    .empty {
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+      text-align: center;
+      padding: 24px 0;
+    }
+    .badge-draft     { background: #F1EFE8; color: #444441; }
+    .badge-in-progress { background: #E6F1FB; color: #0C447C; }
+    .badge-done      { background: #EAF3DE; color: #27500A; }
+    .badge-cancelled { background: #FCEBEB; color: #791F1F; }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span class="toolbar-title">
+    <i class="ti ti-layout-kanban" style="font-size:16px;vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>
+    Spec dashboard
+  </span>
+  <div class="stats" id="stats"></div>
+  <label class="drop-zone" id="dz" title="Upload INDEX.md">
+    <i class="ti ti-upload" style="font-size:15px" aria-hidden="true"></i>
+    <span id="dz-label">Upload INDEX.md</span>
+    <input class="file-input" type="file" id="file-input" accept=".md,text/markdown,text/plain">
+  </label>
+</div>
+
+<div class="board" id="board"></div>
+
+<script>
+const COLS = [
+  { key: 'draft',       label: 'Draft' },
+  { key: 'in-progress', label: 'In progress' },
+  { key: 'done',        label: 'Done' },
+  { key: 'cancelled',   label: 'Cancelled' },
+];
+
+const SAMPLE = [
+  { id:'SPEC-001', title:'Pricing sync via MassTransit outbox', status:'done',        created:'2026-01-15', branch:'feature/SPEC-001-pricing-sync' },
+  { id:'SPEC-002', title:'Batch operation tracking',            status:'done',        created:'2026-02-03', branch:'feature/SPEC-002-batch-tracking' },
+  { id:'SPEC-003', title:'Excel import for asset catalog',      status:'in-progress', created:'2026-03-10', branch:'feature/SPEC-003-excel-import' },
+  { id:'SPEC-004', title:'SonarCloud pre-commit hooks',         status:'in-progress', created:'2026-03-22', branch:'feature/SPEC-004-sonar-hooks' },
+  { id:'SPEC-005', title:'Jira Cloud integration',             status:'draft',       created:'2026-04-01', branch:'feature/SPEC-005-jira-integration' },
+  { id:'SPEC-006', title:'DPD REST courier adapter',           status:'draft',       created:'2026-04-18', branch:'feature/SPEC-006-dpd-rest' },
+  { id:'SPEC-007', title:'Spec dashboard',                     status:'draft',       created:'2026-05-27', branch:'feature/SPEC-007-spec-dashboard' },
+];
+
+function parseIndexMd(text) {
+  const rows = text.split('\n').filter(l => l.trim().startsWith('|') && !l.includes('---') && !l.toLowerCase().includes('| id'));
+  return rows.map(row => {
+    const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+    if (cells.length < 3) return null;
+    const raw = cells[2].toLowerCase();
+    const status = raw === 'implemented' ? 'done' : raw;
+    return { id: cells[0], title: cells[1], status, created: cells[3] || '', branch: cells[4] || '' };
+  }).filter(Boolean);
+}
+
+function renderBoard(specs) {
+  const board = document.getElementById('board');
+  const stats = document.getElementById('stats');
+  board.innerHTML = '';
+
+  const byStatus = {};
+  COLS.forEach(c => byStatus[c.key] = specs.filter(s => s.status === c.key));
+
+  stats.innerHTML = `<div class="stat">Total: <span>${specs.length}</span></div>` +
+    COLS.map(c => `<div class="stat">${c.label}: <span>${byStatus[c.key].length}</span></div>`).join('');
+
+  COLS.forEach(col => {
+    const items = byStatus[col.key] || [];
+    const colEl = document.createElement('div');
+    colEl.className = 'col';
+    colEl.innerHTML = `
+      <div class="col-header">
+        <span class="col-title">${col.label}</span>
+        <span class="col-count">${items.length}</span>
+      </div>
+      <div class="cards" id="cards-${col.key}">
+        ${items.length === 0 ? '<div class="empty">No specs</div>' : ''}
+      </div>`;
+    board.appendChild(colEl);
+
+    const cardsEl = colEl.querySelector('.cards');
+    items.forEach(spec => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-id">${spec.id}</div>
+        <div class="card-title">${spec.title}</div>
+        <div class="card-meta">
+          <span>${spec.created}</span>
+          ${spec.branch ? `<span class="card-branch" title="${spec.branch}">${spec.branch.replace('feature/','')}</span>` : ''}
+        </div>`;
+      cardsEl.appendChild(card);
+    });
+  });
+}
+
+fetch('./INDEX.md')
+  .then(r => r.ok ? r.text() : Promise.reject())
+  .then(text => {
+    const specs = parseIndexMd(text);
+    if (specs.length > 0) { renderBoard(specs); dzLabel.textContent = 'INDEX.md'; }
+    else renderBoard(SAMPLE);
+  })
+  .catch(() => renderBoard(SAMPLE));
+
+const dz = document.getElementById('dz');
+const fi = document.getElementById('file-input');
+const dzLabel = document.getElementById('dz-label');
+
+function loadFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const specs = parseIndexMd(ev.target.result);
+    if (specs.length === 0) { dzLabel.textContent = 'No rows found'; return; }
+    dzLabel.textContent = file.name;
+    renderBoard(specs);
+  };
+  reader.readAsText(file);
+}
+
+fi.addEventListener('change', e => loadFile(e.target.files[0]));
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('active'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('active'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('active'); loadFile(e.dataTransfer.files[0]); });
+</script>
+</body>
+</html>

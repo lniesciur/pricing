@@ -1,0 +1,53 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# dotnet user secrets
+secrets.json
+
+# Test results
+[Tt]est[Rr]esult*/
+TestResults/
+coverage*/
+*.coveragexml
+*.coverage
+
+# Entity Framework
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+appsettings.Development.json
+appsettings.Local.json

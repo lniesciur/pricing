@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Scrutor" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../Shared/Pricing.Shared.Domain/Pricing.Shared.Domain.csproj" />
+    <ProjectReference Include="../../../Shared/Pricing.Shared.Application/Pricing.Shared.Application.csproj" />
+    <ProjectReference Include="../../../Shared/Pricing.Shared.Contracts/Pricing.Shared.Contracts.csproj" />
+    <ProjectReference Include="../Pricing.Rating.Contracts/Pricing.Rating.Contracts.csproj" />
+    <ProjectReference Include="../Pricing.Rating.Domain/Pricing.Rating.Domain.csproj" />
+    <ProjectReference Include="../Pricing.Rating.Facade/Pricing.Rating.Facade.csproj" />
+    <ProjectReference Include="../../Inventory/Pricing.Inventory.Facade/Pricing.Inventory.Facade.csproj" />
+  </ItemGroup>
+
+</Project>
