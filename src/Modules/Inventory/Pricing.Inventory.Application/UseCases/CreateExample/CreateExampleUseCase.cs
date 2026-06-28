@@ -4,7 +4,7 @@ using Pricing.Shared.Domain;
 
 namespace Pricing.Inventory.Application.UseCases.CreateExample;
 
-public class CreateExampleUseCase(IExampleRepository repository, IInventoryUnitOfWork unitOfWork)
+public sealed class CreateExampleUseCase(IExampleRepository repository, IInventoryUnitOfWork unitOfWork)
 {
     public async Task<Result<CreateExampleResponse>> ExecuteAsync(string name, CancellationToken ct)
     {
