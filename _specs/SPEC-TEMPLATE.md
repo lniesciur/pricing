@@ -120,9 +120,9 @@ related: []
 - [ ] Web: page(s) / component(s)
 - [ ] Api: endpoint(s)
 - [ ] Api: validator(s)
-- [ ] Unit tests: domain
-- [ ] Unit tests: application
-- [ ] Integration tests
+- [ ] Unit tests — Domain
+- [ ] Unit tests — Application
+- [ ] Integration tests — Infrastructure
 
 ## Open Questions
 -

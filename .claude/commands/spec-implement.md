@@ -16,9 +16,12 @@ Implement in this order — do not start the next layer until the current one co
 
 1. **Domain** (skip if spec says "None" under Domain Changes)
 2. **Contracts** — create Request/Response/Dto records first; Application depends on them
-3. **Application**
+3. **Application** — use cases; defines interfaces that Infrastructure will implement
 4. **Infrastructure** (run `/migrate <Module>` after EF changes)
 5. **Api**
+
+> **Why Application before Infrastructure?**
+> Infrastructure implements interfaces defined in Domain/Application (IRepository, IUnitOfWork) and registers Application services. Application must compile first.
 
 ### After completing each layer
 
@@ -46,6 +49,44 @@ When the sub-agent returns:
 2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
 3. Fix any compilation errors in the generated tests before proceeding.
 4. Check off `[ ] Unit tests — Domain` in the spec checklist.
+
+---
+
+### ★ After Application layer is confirmed (compiles + tests pass)
+
+Spawn sub-agent **`application-test-writer`** in parallel while you begin the Infrastructure layer.
+
+Pass to the sub-agent:
+- Paths of all Application files created or modified in this spec (use cases)
+- Module name (e.g. `Inventory`)
+- Path to the unit test directory: `tests/Pricing.<Module>.Application.UnitTests/`
+
+Do **not** wait for the sub-agent to finish before continuing to Infrastructure.
+
+When the sub-agent returns:
+1. Review its summary (files created, test count).
+2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
+3. Fix any compilation errors in the generated tests before proceeding.
+4. Check off `[ ] Unit tests — Application` in the spec checklist.
+
+---
+
+### ★ After Infrastructure layer is confirmed (compiles + tests pass)
+
+Spawn sub-agent **`infrastructure-test-writer`** in parallel while you begin the Api layer.
+
+Pass to the sub-agent:
+- Paths of all Infrastructure files created or modified in this spec (repositories, EF configurations)
+- Module name (e.g. `Inventory`)
+- Path to the integration test directory: `tests/Pricing.IntegrationTests/`
+
+Do **not** wait for the sub-agent to finish before continuing to Api.
+
+When the sub-agent returns:
+1. Review its summary (files created, test count).
+2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
+3. Fix any compilation errors in the generated tests before proceeding.
+4. Check off `[ ] Integration tests — Infrastructure` in the spec checklist.
 
 ---
 
