@@ -7,6 +7,9 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,4 +26,12 @@ jobs:
         run: dotnet build Pricing.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Pricing.slnx --no-build --configuration Release --verbosity normal
+        run: dotnet test Pricing.slnx --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=results.trx" --results-directory ./test-results
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: xUnit Tests
+          path: test-results/**/*.trx
+          reporter: dotnet-trx
