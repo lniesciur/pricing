@@ -182,7 +182,7 @@ public class DeviceTypeRepositoryTests : IClassFixture<ApiFactory>, IAsyncDispos
         await _repository.AddAsync(deviceType);
         await _dbContext.SaveChangesAsync();
 
-        var subtypeIds = deviceType.Subtypes.Select(s => s.Id.Value).ToList();
+        var subtypeIds = deviceType.Subtypes.Select(s => s.Id).ToList();
         _dbContext.ChangeTracker.Clear();
 
         // Act
@@ -192,7 +192,7 @@ public class DeviceTypeRepositoryTests : IClassFixture<ApiFactory>, IAsyncDispos
 
         // Assert — subtypes must be cascade-deleted by EF (OnDelete: Cascade)
         var remainingSubtypes = await _dbContext.Set<DeviceSubtype>()
-            .Where(s => subtypeIds.Contains(s.Id.Value))
+            .Where(s => subtypeIds.Contains(s.Id))
             .ToListAsync();
         Assert.Empty(remainingSubtypes);
         // No entry added to _createdTypeIds — the type was already deleted above

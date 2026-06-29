@@ -2,7 +2,6 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using Pricing.Import.Api;
 using Pricing.Inventory.Api;
-using Pricing.Inventory.Infrastructure.Seeding;
 using Pricing.Rating.Api;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,11 +23,7 @@ builder.Services.AddRatingModule(builder.Configuration);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var seeder = scope.ServiceProvider.GetRequiredService<InventorySeeder>();
-    await seeder.SeedAsync();
-}
+await app.Services.StartInventoryModuleAsync();
 
 app.UseStaticFiles();
 
