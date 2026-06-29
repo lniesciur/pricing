@@ -80,7 +80,7 @@ Każdy moduł ma 5 warstw: `*.Facade`, `*.Domain`, `*.Application`, `*.Infrastru
 
 ## Implementacja nowej funkcji w module
 
-Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/Example/`
+Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/DeviceTypes/`
 
 **1. Domain** (`Pricing.{Module}.Domain/<Feature>/`)
 - `<Entity>.cs` — dziedziczy `AggregateRoot<TId>`, fabryka `Create(...)`, bez publicznych setterów
@@ -96,6 +96,7 @@ Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/Ex
 - `Repositories/<Entity>Repository.cs` — implementuje interfejs domenowy, używa `{Module}DbContext`, nie wywołuje `SaveChanges`
 - `Configurations/<Entity>Configuration.cs` — EF Fluent API, konwersje typów dla strongly-typed ids; tabele = PascalCase (`builder.ToTable("EntityName")`), schema = lowercase moduł (`inventory`, `import`, `rating`)
 - Po dodaniu encji: uruchom migrację (patrz Commands)
+- **Dane słownikowe (reference/seed data)** → `migrationBuilder.InsertData()` w dedykowanej migracji, NIE seeder na starcie. Powód: dane wersjonowane ze schematem, brak overhead przy każdym uruchomieniu. `HasData()` nie działa z agregatami mającymi prywatny konstruktor.
 
 **4. Contracts** (`src/Modules/{Module}/Pricing.{Module}.Contracts/<Feature>/`)
 - `<UseCase>Request.cs` — namespace `Pricing.{Module}.Contracts.<Feature>`

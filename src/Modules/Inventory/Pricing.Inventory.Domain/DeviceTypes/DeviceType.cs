@@ -1,4 +1,3 @@
-using Pricing.Inventory.Domain.DeviceTypes.Events;
 using Pricing.Shared.Domain;
 
 namespace Pricing.Inventory.Domain.DeviceTypes;
@@ -17,12 +16,8 @@ public class DeviceType : AggregateRoot<DeviceTypeId>
     public string Name { get; private set; }
     public IReadOnlyList<DeviceSubtype> Subtypes => _subtypes.AsReadOnly();
 
-    public static DeviceType Create(string code, string name)
-    {
-        var deviceType = new DeviceType(DeviceTypeId.New(), code, name);
-        deviceType.RaiseDomainEvent(new DeviceTypeCreated(deviceType.Id, code, name));
-        return deviceType;
-    }
+    public static DeviceType Create(string code, string name) =>
+        new(DeviceTypeId.New(), code, name);
 
     public Result UpdateName(string name)
     {
@@ -35,9 +30,7 @@ public class DeviceType : AggregateRoot<DeviceTypeId>
         if (_subtypes.Any(s => s.Code == code))
             return Result.Fail($"Subtype with code '{code}' already exists in this type.");
 
-        var subtype = DeviceSubtype.Create(code, name);
-        _subtypes.Add(subtype);
-        RaiseDomainEvent(new DeviceSubtypeAdded(Id, subtype.Id, code, name));
+        _subtypes.Add(DeviceSubtype.Create(code, name));
         return Result.Ok();
     }
 

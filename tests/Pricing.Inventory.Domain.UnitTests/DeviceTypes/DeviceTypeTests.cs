@@ -1,5 +1,4 @@
 using Pricing.Inventory.Domain.DeviceTypes;
-using Pricing.Inventory.Domain.DeviceTypes.Events;
 
 namespace Pricing.Inventory.Domain.UnitTests.DeviceTypes;
 
@@ -53,42 +52,6 @@ public class DeviceTypeTests
 
         // Assert
         Assert.Empty(deviceType.Subtypes);
-    }
-
-    [Fact]
-    public void Create_WhenValidCodeAndName_RaisesExactlyOneEvent()
-    {
-        // Act
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        var events = deviceType.PopDomainEvents();
-
-        // Assert
-        Assert.Single(events);
-    }
-
-    [Fact]
-    public void Create_WhenValidCodeAndName_RaisesDeviceTypeCreatedEvent()
-    {
-        // Act
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        var events = deviceType.PopDomainEvents();
-
-        // Assert
-        Assert.IsType<DeviceTypeCreated>(events[0]);
-    }
-
-    [Fact]
-    public void Create_WhenValidCodeAndName_DeviceTypeCreatedEventCarriesCorrectData()
-    {
-        // Act
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        var events = deviceType.PopDomainEvents();
-        var @event = Assert.IsType<DeviceTypeCreated>(events[0]);
-
-        // Assert
-        Assert.Equal(deviceType.Id, @event.Id);
-        Assert.Equal(TypeCode, @event.Code);
-        Assert.Equal(TypeName, @event.Name);
     }
 
     // -------------------------------------------------------------------------
@@ -212,56 +175,6 @@ public class DeviceTypeTests
     }
 
     [Fact]
-    public void AddSubtype_WhenCodeIsUnique_RaisesExactlyOneEvent()
-    {
-        // Arrange
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        deviceType.PopDomainEvents(); // discard DeviceTypeCreated
-
-        // Act
-        deviceType.AddSubtype(SubtypeCode, SubtypeName);
-        var events = deviceType.PopDomainEvents();
-
-        // Assert
-        Assert.Single(events);
-    }
-
-    [Fact]
-    public void AddSubtype_WhenCodeIsUnique_RaisesDeviceSubtypeAddedEvent()
-    {
-        // Arrange
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        deviceType.PopDomainEvents(); // discard DeviceTypeCreated
-
-        // Act
-        deviceType.AddSubtype(SubtypeCode, SubtypeName);
-        var events = deviceType.PopDomainEvents();
-
-        // Assert
-        Assert.IsType<DeviceSubtypeAdded>(events[0]);
-    }
-
-    [Fact]
-    public void AddSubtype_WhenCodeIsUnique_DeviceSubtypeAddedEventCarriesCorrectData()
-    {
-        // Arrange
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        deviceType.PopDomainEvents(); // discard DeviceTypeCreated
-
-        // Act
-        deviceType.AddSubtype(SubtypeCode, SubtypeName);
-        var events = deviceType.PopDomainEvents();
-        var @event = Assert.IsType<DeviceSubtypeAdded>(events[0]);
-
-        // Assert
-        Assert.Equal(deviceType.Id, @event.TypeId);
-        Assert.Equal(SubtypeCode, @event.Code);
-        Assert.Equal(SubtypeName, @event.Name);
-        // SubtypeId in the event must match the id of the newly added subtype
-        Assert.Equal(deviceType.Subtypes[0].Id, @event.SubtypeId);
-    }
-
-    [Fact]
     public void AddSubtype_WhenMultipleUniqueCodesAdded_AllSubtypesPresentInList()
     {
         // Arrange
@@ -316,22 +229,6 @@ public class DeviceTypeTests
 
         // Assert
         Assert.Single(deviceType.Subtypes);
-    }
-
-    [Fact]
-    public void AddSubtype_WhenCodeAlreadyExists_DoesNotRaiseDomainEvent()
-    {
-        // Arrange
-        var deviceType = DeviceType.Create(TypeCode, TypeName);
-        deviceType.AddSubtype(SubtypeCode, SubtypeName);
-        deviceType.PopDomainEvents(); // discard all prior events
-
-        // Act
-        deviceType.AddSubtype(SubtypeCode, "Duplicate");
-        var events = deviceType.PopDomainEvents();
-
-        // Assert
-        Assert.Empty(events);
     }
 
     // -------------------------------------------------------------------------

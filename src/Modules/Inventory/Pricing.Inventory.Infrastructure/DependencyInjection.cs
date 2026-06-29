@@ -1,7 +1,6 @@
 using Pricing.Inventory.Application;
 using Pricing.Inventory.Infrastructure.DomainEvents;
 using Pricing.Inventory.Infrastructure.Persistence;
-using Pricing.Inventory.Infrastructure.Seeding;
 using Pricing.Shared.Application;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,8 +23,6 @@ public static class DependencyInjection
             .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
-
-        services.AddScoped<InventorySeeder>();
 
         services.AddInventoryApplication();
 
