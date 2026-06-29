@@ -26,7 +26,7 @@ public sealed class CsvFileReaderTests
             ExpectedHeaders = ["Name", "Price"]
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options);
+        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Rows.Count);
@@ -43,7 +43,7 @@ public sealed class CsvFileReaderTests
             ExpectedHeaders = ["Name", "Price"]
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options);
+        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options).ToParseResultAsync();
 
         Assert.False(result.IsSuccess);
         Assert.Empty(result.Rows);
@@ -62,7 +62,7 @@ public sealed class CsvFileReaderTests
             RowValidator = new NegativePriceValidator()
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options);
+        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options).ToParseResultAsync();
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Rows.Count);
@@ -76,7 +76,7 @@ public sealed class CsvFileReaderTests
         var csv = "Name,Price\nApple,1.50";
         var options = new FileReaderOptions<ProductRow>();
 
-        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options);
+        var result = await _sut.ReadAsync<ProductRow>(ToCsvStream(csv), options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Single(result.Rows);

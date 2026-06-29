@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using MiniExcelLibs;
 using Pricing.Import.Application.FileReading;
 
@@ -5,53 +6,55 @@ namespace Pricing.Import.Infrastructure.FileReading;
 
 internal sealed class ExcelFileReader
 {
-    public async Task<ParseResult<TRow>> ReadAsync<TRow>(
+    public async IAsyncEnumerable<ParsedItem<TRow>> ReadAsync<TRow>(
         Stream stream,
-        FileReaderOptions<TRow> options)
+        FileReaderOptions<TRow> options,
+        [EnumeratorCancellation] CancellationToken ct = default)
         where TRow : class, new()
     {
         var ms = await EnsureSeekableAsync(stream);
 
-        // Pass 1: extract column names via dynamic (useHeaderRow: true → keys are column names)
-        List<string> actualHeaders = [];
-        var headerRows = await ms.QueryAsync(useHeaderRow: true);
-        foreach (dynamic row in headerRows)
+        // Pass 1: validate headers (only when caller specified expected headers)
+        if (options.ExpectedHeaders.Count > 0)
         {
-            IDictionary<string, object?> dict = row;
-            actualHeaders = [.. dict.Keys];
-            break;
+            List<string> actualHeaders = [];
+            var headerRows = await ms.QueryAsync(useHeaderRow: true);
+            foreach (dynamic row in headerRows)
+            {
+                IDictionary<string, object?> dict = row;
+                actualHeaders = [.. dict.Keys];
+                break;
+            }
+
+            var missingHeaders = options.ExpectedHeaders
+                .Where(h => !actualHeaders.Contains(h, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            if (missingHeaders.Count > 0)
+            {
+                yield return ParsedItem<TRow>.Failure(
+                    new FileParseError(1, $"Missing columns: {string.Join(", ", missingHeaders)}"));
+                yield break;
+            }
+
+            ms.Seek(0, SeekOrigin.Begin);
         }
 
-        var missingHeaders = options.ExpectedHeaders
-            .Where(h => !actualHeaders.Contains(h, StringComparer.OrdinalIgnoreCase))
-            .ToList();
-
-        if (missingHeaders.Count > 0)
-            return new ParseResult<TRow>
-            {
-                Errors = [new FileParseError(1, $"Missing columns: {string.Join(", ", missingHeaders)}")]
-            };
-
-        // Pass 2: typed rows (QueryAsync<T> always uses header row for property mapping)
-        ms.Seek(0, SeekOrigin.Begin);
-
-        var rows = new List<TRow>();
-        var errors = new List<FileParseError>();
+        // Pass 2: stream typed rows one at a time
         var rowNumber = 2;
-
         foreach (var row in await ms.QueryAsync<TRow>())
         {
+            ct.ThrowIfCancellationRequested();
+
             var validationErrors = options.RowValidator?.Validate(row).ToList() ?? [];
             if (validationErrors.Count > 0)
                 foreach (var error in validationErrors)
-                    errors.Add(new FileParseError(rowNumber, error));
+                    yield return ParsedItem<TRow>.Failure(new FileParseError(rowNumber, error));
             else
-                rows.Add(row);
+                yield return ParsedItem<TRow>.Success(row);
 
             rowNumber++;
         }
-
-        return new ParseResult<TRow> { Rows = rows, Errors = errors };
     }
 
     private static async Task<MemoryStream> EnsureSeekableAsync(Stream stream)

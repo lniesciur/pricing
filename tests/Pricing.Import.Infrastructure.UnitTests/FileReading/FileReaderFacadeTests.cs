@@ -32,7 +32,7 @@ public sealed class FileReaderFacadeTests
         var stream = ToCsvStream("Name\nApple");
         var options = new FileReaderOptions<SampleRow> { ExpectedHeaders = ["Name"] };
 
-        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.csv", options);
+        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.csv", options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Single(result.Rows);
@@ -44,7 +44,7 @@ public sealed class FileReaderFacadeTests
         var stream = CreateXlsx([new { Name = "Apple" }]);
         var options = new FileReaderOptions<SampleRow> { ExpectedHeaders = ["Name"] };
 
-        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.xlsx", options);
+        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.xlsx", options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Single(result.Rows);
@@ -53,21 +53,20 @@ public sealed class FileReaderFacadeTests
     [Fact]
     public async Task ReadAsync_WhenFileNameIsXls_DelegatesToExcelFileReader()
     {
-        // xls extension is routed to ExcelFileReader (MiniExcel handles format detection)
         var stream = CreateXlsx([new { Name = "Apple" }]);
         var options = new FileReaderOptions<SampleRow> { ExpectedHeaders = ["Name"] };
 
-        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.xls", options);
+        var result = await BuildFacade().ReadAsync<SampleRow>(stream, "products.xls", options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public async Task ReadAsync_WhenUnknownExtension_ThrowsNotSupportedException()
+    public void ReadAsync_WhenUnknownExtension_ThrowsNotSupportedException()
     {
         var options = new FileReaderOptions<SampleRow>();
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
+        Assert.Throws<NotSupportedException>(() =>
             BuildFacade().ReadAsync<SampleRow>(new MemoryStream(), "data.ods", options));
     }
 }

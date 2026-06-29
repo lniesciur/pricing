@@ -4,7 +4,7 @@ namespace Pricing.Import.Infrastructure.FileReading;
 
 internal sealed class FileReaderFacade(CsvFileReader csvReader, ExcelFileReader excelReader) : IFileReader
 {
-    public Task<ParseResult<TRow>> ReadAsync<TRow>(
+    public IAsyncEnumerable<ParsedItem<TRow>> ReadAsync<TRow>(
         Stream stream,
         string fileName,
         FileReaderOptions<TRow> options)

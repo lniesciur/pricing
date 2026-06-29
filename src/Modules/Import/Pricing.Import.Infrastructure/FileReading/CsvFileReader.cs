@@ -1,15 +1,22 @@
+using System.Collections.Concurrent;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 using Pricing.Import.Application.FileReading;
 
 namespace Pricing.Import.Infrastructure.FileReading;
 
 internal sealed class CsvFileReader
 {
-    public async Task<ParseResult<TRow>> ReadAsync<TRow>(
+    // ClassMap built once per TRow type via reflection, reused across all CsvReader instances
+    private static readonly ConcurrentDictionary<Type, ClassMap> _classMapCache = new();
+
+    public async IAsyncEnumerable<ParsedItem<TRow>> ReadAsync<TRow>(
         Stream stream,
-        FileReaderOptions<TRow> options)
+        FileReaderOptions<TRow> options,
+        [EnumeratorCancellation] CancellationToken ct = default)
         where TRow : class, new()
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -21,6 +28,9 @@ internal sealed class CsvFileReader
         using var reader = new StreamReader(stream, leaveOpen: true);
         using var csv = new CsvReader(reader, config);
 
+        if (_classMapCache.TryGetValue(typeof(TRow), out var cachedMap))
+            csv.Context.RegisterClassMap(cachedMap);
+
         await csv.ReadAsync();
         csv.ReadHeader();
 
@@ -30,45 +40,54 @@ internal sealed class CsvFileReader
             .ToList();
 
         if (missingHeaders.Count > 0)
-            return new ParseResult<TRow>
-            {
-                Errors = [new FileParseError(1, $"Missing columns: {string.Join(", ", missingHeaders)}")]
-            };
+        {
+            yield return ParsedItem<TRow>.Failure(
+                new FileParseError(1, $"Missing columns: {string.Join(", ", missingHeaders)}"));
+            yield break;
+        }
 
-        var rows = new List<TRow>();
-        var errors = new List<FileParseError>();
         var rowNumber = 2;
+        var mapCached = _classMapCache.ContainsKey(typeof(TRow));
 
         while (await csv.ReadAsync())
         {
+            ct.ThrowIfCancellationRequested();
+
             TRow? row = null;
+            FileParseError? parseError = null;
             try
             {
                 row = csv.GetRecord<TRow>();
             }
             catch (Exception ex)
             {
-                errors.Add(new FileParseError(rowNumber, ex.Message));
+                parseError = new FileParseError(rowNumber, ex.Message);
+            }
+
+            if (parseError is not null)
+            {
+                yield return ParsedItem<TRow>.Failure(parseError);
                 rowNumber++;
                 continue;
             }
 
-            if (row is null)
+            if (row is null) { rowNumber++; continue; }
+
+            if (!mapCached)
             {
-                rowNumber++;
-                continue;
+                if (csv.Context.Maps[typeof(TRow)] is { } map)
+                    _classMapCache.TryAdd(typeof(TRow), map);
+                mapCached = true;
             }
 
             var validationErrors = options.RowValidator?.Validate(row).ToList() ?? [];
             if (validationErrors.Count > 0)
                 foreach (var error in validationErrors)
-                    errors.Add(new FileParseError(rowNumber, error));
+                    yield return ParsedItem<TRow>.Failure(new FileParseError(rowNumber, error));
             else
-                rows.Add(row);
+                yield return ParsedItem<TRow>.Success(row);
 
             rowNumber++;
         }
-
-        return new ParseResult<TRow> { Rows = rows, Errors = errors };
     }
 }
