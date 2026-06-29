@@ -23,6 +23,8 @@ builder.Services.AddRatingModule(builder.Configuration);
 
 var app = builder.Build();
 
+await app.Services.StartInventoryModuleAsync();
+
 app.UseStaticFiles();
 
 app.UseFastEndpoints(c =>

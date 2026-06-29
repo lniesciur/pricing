@@ -1,9 +1,6 @@
-using Pricing.Inventory.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 
 namespace Pricing.IntegrationTests.Infrastructure;
@@ -17,10 +14,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _mssql.StartAsync();
-
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
-        await db.Database.MigrateAsync();
+        _ = Services; // trigger host startup: migration + seeding run via StartInventoryModuleAsync
     }
 
     public new async Task DisposeAsync()

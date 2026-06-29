@@ -69,7 +69,7 @@ Każdy moduł ma 5 warstw: `*.Facade`, `*.Domain`, `*.Application`, `*.Infrastru
 | `*.Domain` | Agregaty, value objects, domain events, interfejsy repozytoriów. Zależy od Shared.Domain. |
 | `*.Contracts` | Request + response DTOs modułu. Zero zależności (czyste rekordy). |
 | `*.Application` | Use casy, DI registration. Zależy od Domain + Facade + Contracts + Shared.{Domain,Application,Contracts}. |
-| `*.Infrastructure` | EF Core DbContext per moduł (schema = lowercase moduł), repozytoria, UnitOfWork. Rejestruje Application. |
+| `*.Infrastructure` | EF Core DbContext per moduł (schema = lowercase moduł, tabele = PascalCase), repozytoria, UnitOfWork. Rejestruje Application. |
 | `*.Api` | FastEndpoints endpoints + validators + `AddXxxModule()` installer. Zależy od Contracts + Infrastructure. |
 
 ### Komunikacja między modułami
@@ -80,7 +80,7 @@ Każdy moduł ma 5 warstw: `*.Facade`, `*.Domain`, `*.Application`, `*.Infrastru
 
 ## Implementacja nowej funkcji w module
 
-Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/Example/`
+Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/DeviceTypes/`
 
 **1. Domain** (`Pricing.{Module}.Domain/<Feature>/`)
 - `<Entity>.cs` — dziedziczy `AggregateRoot<TId>`, fabryka `Create(...)`, bez publicznych setterów
@@ -94,8 +94,9 @@ Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/Ex
 
 **3. Infrastructure** (`Pricing.{Module}.Infrastructure/Persistence/`)
 - `Repositories/<Entity>Repository.cs` — implementuje interfejs domenowy, używa `{Module}DbContext`, nie wywołuje `SaveChanges`
-- `Configurations/<Entity>Configuration.cs` — EF Fluent API, konwersje typów dla strongly-typed ids
+- `Configurations/<Entity>Configuration.cs` — EF Fluent API, konwersje typów dla strongly-typed ids; tabele = PascalCase (`builder.ToTable("EntityName")`), schema = lowercase moduł (`inventory`, `import`, `rating`)
 - Po dodaniu encji: uruchom migrację (patrz Commands)
+- **Dane słownikowe (reference/seed data)** → `migrationBuilder.InsertData()` w dedykowanej migracji, NIE seeder na starcie. Powód: dane wersjonowane ze schematem, brak overhead przy każdym uruchomieniu. `HasData()` nie działa z agregatami mającymi prywatny konstruktor.
 
 **4. Contracts** (`src/Modules/{Module}/Pricing.{Module}.Contracts/<Feature>/`)
 - `<UseCase>Request.cs` — namespace `Pricing.{Module}.Contracts.<Feature>`
