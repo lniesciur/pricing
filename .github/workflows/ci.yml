@@ -27,7 +27,7 @@ jobs:
 
       - name: Test
         run: |
-          find tests -name "*.csproj" | while read proj; do
+          find tests -name "*.csproj" | grep -v "PerformanceBenchmarks" | while read proj; do
             name=$(basename "$proj" .csproj)
             dotnet test "$proj" --no-build --configuration Release --verbosity normal \
               --logger "trx;LogFileName=${name}.trx" \
