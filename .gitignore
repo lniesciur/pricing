@@ -37,6 +37,9 @@ coverage*/
 *.coveragexml
 *.coverage
 
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
 # Entity Framework
 *.db
 *.sqlite

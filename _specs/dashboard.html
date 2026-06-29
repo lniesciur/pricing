@@ -216,10 +216,11 @@ function parseIndexMd(text) {
   const rows = text.split('\n').filter(l => l.trim().startsWith('|') && !l.includes('---') && !l.toLowerCase().includes('| id'));
   return rows.map(row => {
     const cells = row.split('|').map(c => c.trim()).filter(Boolean);
-    if (cells.length < 3) return null;
-    const raw = cells[2].toLowerCase();
+    if (cells.length < 5) return null;
+    // columns: ID | Title | Module | Status | Created | Branch
+    const raw = cells[3].toLowerCase();
     const status = raw === 'implemented' ? 'done' : raw;
-    return { id: cells[0], title: cells[1], status, created: cells[3] || '', branch: cells[4] || '' };
+    return { id: cells[0], title: cells[1], module: cells[2], status, created: cells[4] || '', branch: cells[5] || '' };
   }).filter(Boolean);
 }
 
@@ -253,7 +254,7 @@ function renderBoard(specs) {
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <div class="card-id">${spec.id}</div>
+        <div class="card-id">${spec.id}${spec.module ? ` · ${spec.module}` : ''}</div>
         <div class="card-title">${spec.title}</div>
         <div class="card-meta">
           <span>${spec.created}</span>

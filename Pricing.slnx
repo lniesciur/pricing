@@ -45,5 +45,6 @@
     <Project Path="tests/Pricing.Import.Infrastructure.UnitTests/Pricing.Import.Infrastructure.UnitTests.csproj" />
     <Project Path="tests/Pricing.IntegrationTests/Pricing.IntegrationTests.csproj" />
     <Project Path="tests/Pricing.ArchitectureTests/Pricing.ArchitectureTests.csproj" />
+    <Project Path="tests/Pricing.Import.PerformanceBenchmarks/Pricing.Import.PerformanceBenchmarks.csproj" />
   </Folder>
 </Solution>
