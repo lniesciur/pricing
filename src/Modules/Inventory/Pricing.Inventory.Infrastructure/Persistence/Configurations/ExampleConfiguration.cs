@@ -8,7 +8,7 @@ public class ExampleConfiguration : IEntityTypeConfiguration<ExampleAggregate>
 {
     public void Configure(EntityTypeBuilder<ExampleAggregate> builder)
     {
-        builder.ToTable("examples");
+        builder.ToTable("Examples");
 
         builder.HasKey(e => e.Id);
 
