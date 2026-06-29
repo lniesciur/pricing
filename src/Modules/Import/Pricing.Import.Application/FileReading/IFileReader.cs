@@ -2,7 +2,7 @@ namespace Pricing.Import.Application.FileReading;
 
 public interface IFileReader
 {
-    Task<ParseResult<TRow>> ReadAsync<TRow>(
+    IAsyncEnumerable<ParsedItem<TRow>> ReadAsync<TRow>(
         Stream stream,
         string fileName,
         FileReaderOptions<TRow> options)

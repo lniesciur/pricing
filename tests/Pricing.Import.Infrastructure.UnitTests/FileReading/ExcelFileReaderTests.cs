@@ -35,7 +35,7 @@ public sealed class ExcelFileReaderTests
             ExpectedHeaders = ["Name", "Price"]
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ms, options);
+        var result = await _sut.ReadAsync<ProductRow>(ms, options).ToParseResultAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Rows.Count);
@@ -54,7 +54,7 @@ public sealed class ExcelFileReaderTests
             ExpectedHeaders = ["Name", "Price"]
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ms, options);
+        var result = await _sut.ReadAsync<ProductRow>(ms, options).ToParseResultAsync();
 
         Assert.False(result.IsSuccess);
         Assert.Empty(result.Rows);
@@ -77,7 +77,7 @@ public sealed class ExcelFileReaderTests
             RowValidator = new NegativePriceValidator()
         };
 
-        var result = await _sut.ReadAsync<ProductRow>(ms, options);
+        var result = await _sut.ReadAsync<ProductRow>(ms, options).ToParseResultAsync();
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Rows.Count);
