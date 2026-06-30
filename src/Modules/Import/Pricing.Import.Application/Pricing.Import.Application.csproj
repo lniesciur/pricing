@@ -17,6 +17,7 @@
     <ProjectReference Include="../Pricing.Import.Contracts/Pricing.Import.Contracts.csproj" />
     <ProjectReference Include="../Pricing.Import.Domain/Pricing.Import.Domain.csproj" />
     <ProjectReference Include="../Pricing.Import.Facade/Pricing.Import.Facade.csproj" />
+    <ProjectReference Include="..\..\Inventory\Pricing.Inventory.Facade\Pricing.Inventory.Facade.csproj" />
   </ItemGroup>
 
 </Project>

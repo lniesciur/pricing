@@ -1,39 +1,27 @@
 <Solution>
   <Folder Name="/src/">
-    <Folder Name="/src/Shared/">
-      <Project Path="src/Shared/Pricing.Shared.Domain/Pricing.Shared.Domain.csproj" />
-      <Project Path="src/Shared/Pricing.Shared.Application/Pricing.Shared.Application.csproj" />
-      <Project Path="src/Shared/Pricing.Shared.Contracts/Pricing.Shared.Contracts.csproj" />
-    </Folder>
-    <Folder Name="/src/Modules/">
-      <Folder Name="/src/Modules/Inventory/">
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Facade/Pricing.Inventory.Facade.csproj" />
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Domain/Pricing.Inventory.Domain.csproj" />
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Contracts/Pricing.Inventory.Contracts.csproj" />
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Application/Pricing.Inventory.Application.csproj" />
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Infrastructure/Pricing.Inventory.Infrastructure.csproj" />
-        <Project Path="src/Modules/Inventory/Pricing.Inventory.Api/Pricing.Inventory.Api.csproj" />
-      </Folder>
-      <Folder Name="/src/Modules/Import/">
-        <Project Path="src/Modules/Import/Pricing.Import.Facade/Pricing.Import.Facade.csproj" />
-        <Project Path="src/Modules/Import/Pricing.Import.Domain/Pricing.Import.Domain.csproj" />
-        <Project Path="src/Modules/Import/Pricing.Import.Contracts/Pricing.Import.Contracts.csproj" />
-        <Project Path="src/Modules/Import/Pricing.Import.Application/Pricing.Import.Application.csproj" />
-        <Project Path="src/Modules/Import/Pricing.Import.Infrastructure/Pricing.Import.Infrastructure.csproj" />
-        <Project Path="src/Modules/Import/Pricing.Import.Api/Pricing.Import.Api.csproj" />
-      </Folder>
-      <Folder Name="/src/Modules/Rating/">
-        <Project Path="src/Modules/Rating/Pricing.Rating.Facade/Pricing.Rating.Facade.csproj" />
-        <Project Path="src/Modules/Rating/Pricing.Rating.Domain/Pricing.Rating.Domain.csproj" />
-        <Project Path="src/Modules/Rating/Pricing.Rating.Contracts/Pricing.Rating.Contracts.csproj" />
-        <Project Path="src/Modules/Rating/Pricing.Rating.Application/Pricing.Rating.Application.csproj" />
-        <Project Path="src/Modules/Rating/Pricing.Rating.Infrastructure/Pricing.Rating.Infrastructure.csproj" />
-        <Project Path="src/Modules/Rating/Pricing.Rating.Api/Pricing.Rating.Api.csproj" />
-      </Folder>
-    </Folder>
-    <Folder Name="/src/Pricing.Api/">
-      <Project Path="src/Pricing.Api/Pricing.Api.csproj" />
-    </Folder>
+    <Project Path="src/Shared/Pricing.Shared.Domain/Pricing.Shared.Domain.csproj" />
+    <Project Path="src/Shared/Pricing.Shared.Application/Pricing.Shared.Application.csproj" />
+    <Project Path="src/Shared/Pricing.Shared.Contracts/Pricing.Shared.Contracts.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Facade/Pricing.Inventory.Facade.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Domain/Pricing.Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Contracts/Pricing.Inventory.Contracts.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Application/Pricing.Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Infrastructure/Pricing.Inventory.Infrastructure.csproj" />
+    <Project Path="src/Modules/Inventory/Pricing.Inventory.Api/Pricing.Inventory.Api.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Facade/Pricing.Import.Facade.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Domain/Pricing.Import.Domain.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Contracts/Pricing.Import.Contracts.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Application/Pricing.Import.Application.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Infrastructure/Pricing.Import.Infrastructure.csproj" />
+    <Project Path="src/Modules/Import/Pricing.Import.Api/Pricing.Import.Api.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Facade/Pricing.Rating.Facade.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Domain/Pricing.Rating.Domain.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Contracts/Pricing.Rating.Contracts.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Application/Pricing.Rating.Application.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Infrastructure/Pricing.Rating.Infrastructure.csproj" />
+    <Project Path="src/Modules/Rating/Pricing.Rating.Api/Pricing.Rating.Api.csproj" />
+    <Project Path="src/Pricing.Api/Pricing.Api.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Pricing.Inventory.Domain.UnitTests/Pricing.Inventory.Domain.UnitTests.csproj" />

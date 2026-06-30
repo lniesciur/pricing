@@ -22,12 +22,19 @@ The connection string is read from:
 
 ## Steps
 
-1. Run the migration for the given module:
+1. Run the migration for the given module. Each module maps to a specific DbContext — always pass `--context` to avoid the "More than one DbContext was found" error:
+
+| Module    | DbContext               |
+|-----------|-------------------------|
+| Inventory | InventoryDbContext      |
+| Import    | ImportDbContext         |
+| Rating    | RatingDbContext         |
 
 ```bash
 dotnet ef database update \
   --project src/Modules/<Module>/Pricing.<Module>.Infrastructure \
-  --startup-project src/Pricing.Api
+  --startup-project src/Pricing.Api \
+  --context <Module>DbContext
 ```
 
 2. Confirm output ends with `Done.` — if not, report the error to the user.
