@@ -2,9 +2,9 @@
 id: SPEC-006
 title: Device Import Pipeline
 module: Import
-status: in-progress
+status: implemented
 created: 2026-06-29
-updated: 2026-06-29
+updated: 2026-06-30
 branch: feature/SPEC-006-device-import-pipeline
 related: [SPEC-004, SPEC-005]
 ---
@@ -191,9 +191,9 @@ a wynik dostępny przez polling statusu joba.
 - [x] Import Application: ListDeviceImportsUseCase
 - [x] Import Api: list endpoint (`GET /import/device-imports`)
 - [x] Unit tests — Import Domain
-- [ ] Unit tests — Import Application
-- [ ] Unit tests — Inventory Application (RegisterDevicesUseCase)
-- [ ] Integration tests — Infrastructure
+- [x] Unit tests — Import Application
+- [x] Unit tests — Inventory Application (RegisterDevicesUseCase)
+- [x] Integration tests — Infrastructure
 
 ## Open Questions
 - None
