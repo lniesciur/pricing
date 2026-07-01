@@ -71,6 +71,42 @@ namespace Pricing.Inventory.Infrastructure.Migrations
                     b.ToTable("DeviceTypes", "inventory");
                 });
 
+            modelBuilder.Entity("Pricing.Inventory.Domain.Devices.Device", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EanCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ManufacturerCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SubtypeCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TypeCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EanCode")
+                        .IsUnique();
+
+                    b.ToTable("Devices", "inventory");
+                });
+
             modelBuilder.Entity("Pricing.Inventory.Domain.Manufacturers.Manufacturer", b =>
                 {
                     b.Property<Guid>("Id")

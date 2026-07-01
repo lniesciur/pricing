@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Hangfire;
 using Pricing.Import.Api;
 using Pricing.Inventory.Api;
 using Pricing.Rating.Api;
@@ -24,7 +25,9 @@ builder.Services.AddRatingModule(builder.Configuration);
 var app = builder.Build();
 
 await app.Services.StartInventoryModuleAsync();
+await app.Services.StartImportModuleAsync();
 
+app.UseHangfireDashboard("/hangfire");
 app.UseStaticFiles();
 
 app.UseFastEndpoints(c =>

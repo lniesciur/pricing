@@ -78,6 +78,9 @@ Każdy moduł ma 5 warstw: `*.Facade`, `*.Domain`, `*.Application`, `*.Infrastru
 - Cross-module async: Hangfire (`hangfire` schema w DB)
 - In-process domain events: `IDomainEventDispatcher` (domyślnie `NullDomainEventDispatcher`)
 
+**Kontrakty Facade używają słownictwa modułu docelowego, nie wywołującego.**
+Jeśli Import woła Inventory przez fasadę, kontrakt opisuje co Inventory potrzebuje (`RegisterDeviceRequest`), nie co Import ma (`DeviceImportRow`). Identyfikatory specyficzne dla callera (np. `RowNumber` z pliku CSV) nie przekraczają granicy modułu — caller utrzymuje własne mapowanie (np. `EanCode → RowNumber`) i przekłada je po otrzymaniu odpowiedzi.
+
 ## Implementacja nowej funkcji w module
 
 Wzorzec na przykładzie Inventory: `src/Modules/Inventory/Pricing.Inventory.*/DeviceTypes/`
