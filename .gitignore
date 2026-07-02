@@ -49,6 +49,9 @@ BenchmarkDotNet.Artifacts/
 Thumbs.db
 desktop.ini
 
+# Generated import test files
+tools/generated/
+
 # Environment / secrets
 .env
 .env.*

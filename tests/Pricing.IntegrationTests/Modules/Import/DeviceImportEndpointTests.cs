@@ -1,6 +1,8 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using MiniExcelLibs;
 using Pricing.Import.Contracts.DeviceImports;
 using Pricing.Import.Infrastructure.Persistence;
 using Pricing.IntegrationTests.Infrastructure;
@@ -12,22 +14,20 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
 {
     private readonly HttpClient _client;
     private readonly ApiFactory _factory;
-    private readonly IServiceScope _scope;
-    private readonly ImportDbContext _db;
     private readonly List<Guid> _createdJobIds = [];
 
     public DeviceImportEndpointTests(ApiFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _scope = factory.Services.CreateScope();
-        _db = _scope.ServiceProvider.GetRequiredService<ImportDbContext>();
     }
+
+    // ── Upload endpoint (HTTP layer only) ────────────────────────────────────
 
     [Fact]
     public async Task UploadDeviceImport_WithValidCsvFile_Returns202WithJobId()
     {
-        using var content = BuildMultipart("devices.csv", "EanCode,Name,TypeCode\nEAN001,Device A,LAPTOP");
+        using var content = BuildCsvMultipart("devices.csv", "EanCode,Name,TypeCode,SubtypeCode,ManufacturerCode\nEAN001,Device A,LAPTOP,,");
 
         var response = await _client.PostAsync("/api/import/device-imports", content);
 
@@ -39,7 +39,7 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
     }
 
     [Fact]
-    public async Task UploadDeviceImport_WithValidXlsxFile_Returns202WithJobId()
+    public async Task UploadDeviceImport_WithXlsxContentType_Returns202WithJobId()
     {
         using var content = BuildMultipart("devices.xlsx", "placeholder", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
@@ -62,7 +62,78 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-[Fact]
+    // ── Processing pipeline (end-to-end: upload → Hangfire → terminal status) ─
+
+    [Fact]
+    public async Task ProcessDeviceImport_WithValidCsv_CompletesWithAddedDevices()
+    {
+        var csv = "EanCode,Name,TypeCode,SubtypeCode,ManufacturerCode\nEAN-E2E-001,Device A,LAPTOP,,\nEAN-E2E-002,Device B,PHONE,,";
+        using var content = BuildCsvMultipart("e2e-valid.csv", csv);
+
+        var uploadResponse = await _client.PostAsync("/api/import/device-imports", content);
+        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
+        _createdJobIds.Add(body!.JobId);
+
+        var job = await GetJobAsync(body.JobId);
+
+        Assert.Equal(ImportJobStatus.Completed, job.Status);
+        Assert.Equal(2, job.Added);
+        Assert.Empty(job.Errors);
+    }
+
+    [Fact]
+    public async Task ProcessDeviceImport_WithDuplicateEanInFile_CompletesWithRowError()
+    {
+        var csv = "EanCode,Name,TypeCode,SubtypeCode,ManufacturerCode\nEAN-DUP-001,Device A,LAPTOP,,\nEAN-DUP-001,Device B,PHONE,,";
+        using var content = BuildCsvMultipart("e2e-dup.csv", csv);
+
+        var uploadResponse = await _client.PostAsync("/api/import/device-imports", content);
+        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
+        _createdJobIds.Add(body!.JobId);
+
+        var job = await GetJobAsync(body.JobId);
+
+        Assert.Equal(ImportJobStatus.Completed, job.Status);
+        Assert.Equal(1, job.Added);
+        Assert.Single(job.Errors);
+        Assert.Contains("Duplicate EanCode", job.Errors[0].ErrorMessage);
+    }
+
+    [Fact]
+    public async Task ProcessDeviceImport_WithValidXlsx_CompletesWithAddedDevice()
+    {
+        using var content = BuildValidXlsxMultipart("e2e-valid.xlsx",
+            new { EanCode = "EAN-XLSX-001", Name = "Xlsx Device", TypeCode = "LAPTOP", SubtypeCode = "", ManufacturerCode = "" });
+
+        var uploadResponse = await _client.PostAsync("/api/import/device-imports", content);
+        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
+        _createdJobIds.Add(body!.JobId);
+
+        var job = await GetJobAsync(body.JobId);
+
+        Assert.Equal(ImportJobStatus.Completed, job.Status);
+        Assert.Equal(1, job.Added);
+        Assert.Empty(job.Errors);
+    }
+
+    [Fact]
+    public async Task ProcessDeviceImport_WithCorruptXlsxContent_MarksJobAsFailed()
+    {
+        using var content = BuildMultipart("e2e-corrupt.xlsx", "not-an-xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        var uploadResponse = await _client.PostAsync("/api/import/device-imports", content);
+        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
+        _createdJobIds.Add(body!.JobId);
+
+        var job = await GetJobAsync(body.JobId);
+
+        Assert.Equal(ImportJobStatus.Failed, job.Status);
+    }
+
+    // ── Query endpoints ───────────────────────────────────────────────────────
+
+    [Fact]
     public async Task GetDeviceImport_WhenJobExists_Returns200WithDetails()
     {
         var jobId = await UploadAndGetJobId("get-test.csv");
@@ -101,15 +172,16 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
     [Fact]
     public async Task ListDeviceImports_WithStatusFilter_ReturnsOnlyMatchingJobs()
     {
+        // With SynchronousImportJobScheduler the job is Completed immediately after upload.
         var jobId = await UploadAndGetJobId("filter-test.csv");
 
-        var response = await _client.GetAsync($"/api/import/device-imports?status={ImportJobStatus.Queued}");
+        var response = await _client.GetAsync($"/api/import/device-imports?status={ImportJobStatus.Completed}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<ListDeviceImportsResponse>();
         Assert.NotNull(body);
-        Assert.All(body.Items, item => Assert.Equal(nameof(ImportJobStatus.Queued), item.Status));
-        _ = jobId; // uploaded job may have been processed by Hangfire already
+        Assert.All(body.Items, item => Assert.Equal(nameof(ImportJobStatus.Completed), item.Status));
+        Assert.Contains(body.Items, item => item.JobId == jobId);
     }
 
     [Fact]
@@ -130,9 +202,11 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
         _ = (id1, id2, id3);
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private async Task<Guid> UploadAndGetJobId(string fileName)
     {
-        using var content = BuildMultipart(fileName, "EanCode,Name,TypeCode\nEAN001,Device,LAPTOP");
+        using var content = BuildCsvMultipart(fileName, "EanCode,Name,TypeCode,SubtypeCode,ManufacturerCode\nEAN001,Device,LAPTOP,,");
         var response = await _client.PostAsync("/api/import/device-imports", content);
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
@@ -140,13 +214,37 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
         return body.JobId;
     }
 
+    private async Task<GetDeviceImportResponse> GetJobAsync(Guid jobId)
+    {
+        var response = await _client.GetAsync($"/api/import/device-imports/{jobId}");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<GetDeviceImportResponse>())!;
+    }
+
+    private static MultipartFormDataContent BuildCsvMultipart(string fileName, string csvContent)
+        => BuildMultipart(fileName, csvContent, "text/csv");
+
     private static MultipartFormDataContent BuildMultipart(string fileName, string fileContent, string mediaType = "text/csv")
     {
         var content = new MultipartFormDataContent();
         var fileBytes = System.Text.Encoding.UTF8.GetBytes(fileContent);
         var fileStreamContent = new ByteArrayContent(fileBytes);
-        fileStreamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType);
+        fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
         content.Add(fileStreamContent, "file", fileName);
+        return content;
+    }
+
+    private static MultipartFormDataContent BuildValidXlsxMultipart(string fileName, object row)
+    {
+        var stream = new MemoryStream();
+        stream.SaveAs(new[] { row }, excelType: ExcelType.XLSX);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(stream.ToArray());
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        content.Add(fileContent, "file", fileName);
         return content;
     }
 
@@ -164,6 +262,6 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
             }
         }
 
-        _scope.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -21,9 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MiniExcel" Version="1.35.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/Pricing.Api/Pricing.Api.csproj" />
     <ProjectReference Include="../../src/Modules/Inventory/Pricing.Inventory.Infrastructure/Pricing.Inventory.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Modules/Import/Pricing.Import.Infrastructure/Pricing.Import.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Modules/Import/Pricing.Import.Application/Pricing.Import.Application.csproj" />
     <ProjectReference Include="../../src/Modules/Import/Pricing.Import.Contracts/Pricing.Import.Contracts.csproj" />
     <ProjectReference Include="../../src/Shared/Pricing.Shared.Contracts/Pricing.Shared.Contracts.csproj" />
   </ItemGroup>
