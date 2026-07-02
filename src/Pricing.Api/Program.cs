@@ -34,6 +34,7 @@ app.UseFastEndpoints(c =>
 {
     c.Endpoints.RoutePrefix = "api";
     c.Errors.UseProblemDetails();
+    c.Serializer.Options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 app.UseSwaggerGen(uiConfig: ui =>
 {
