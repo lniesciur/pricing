@@ -1,123 +1,356 @@
 # Command: spec-implement
+
 Implement a feature from an existing specification, layer by layer.
 
 ## Usage
+
 ```
 /spec-implement SPEC-NNN
 ```
+
+---
 
 ## Instructions
 
 Read `_specs/active/SPEC-NNN.md` before doing anything else.
 
-Update spec status to `in-progress` in the file and in `_specs/INDEX.md`.
+Update the specification status to `in-progress` both in:
 
-Implement in this order — do not start the next layer until the current one compiles and all tests pass:
+- the specification file
+- `_specs/INDEX.md`
 
-1. **Domain** (skip if spec says "None" under Domain Changes)
-2. **Contracts** — create Request/Response/Dto records first; Application depends on them
-3. **Application** — use cases; defines interfaces that Infrastructure will implement
+Implement the feature in the following order. Do not start the next layer until the current one builds successfully and all tests pass.
+
+1. **Domain** (skip if the specification says `None` under Domain Changes)
+2. **Contracts**
+3. **Application**
 4. **Infrastructure** (run `/migrate <Module>` after EF changes)
 5. **Api**
 
 > **Why Application before Infrastructure?**
-> Infrastructure implements interfaces defined in Domain/Application (IRepository, IUnitOfWork) and registers Application services. Application must compile first.
-
-### After completing each layer
-
-1. Run `dotnet build Pricing.slnx` — fix any compiler errors before continuing.
-2. Run `dotnet test Pricing.slnx` — fix any failing tests before continuing.
-   - If a failing test is pre-existing (unrelated to this spec), note it explicitly and confirm with the user before moving on.
-3. Check off the relevant items in `## Implementation Checklist` in the spec file.
-4. Briefly confirm to the user what was done and what comes next.
+>
+> Infrastructure implements interfaces defined by Domain/Application. Application must compile first.
 
 ---
 
-### ★ After Domain layer is confirmed (compiles + tests pass)
+## After completing each implementation layer
 
-Spawn sub-agent **`domain-test-writer`** in parallel while you begin the Contracts layer.
+1. Run:
 
-Pass to the sub-agent:
-- Paths of all Domain files created or modified in this spec
+```
+dotnet build Pricing.slnx
+```
+
+Fix all compilation errors before continuing.
+
+2. Run:
+
+```
+dotnet test Pricing.slnx
+```
+
+Fix all failing tests before continuing.
+
+If any failing test is unrelated to the current specification:
+
+- report it explicitly
+- ask the user before continuing
+
+3. Update the corresponding items in the specification's **Implementation Checklist**.
+
+4. Briefly report:
+
+- what was completed
+- what layer comes next
+
+---
+
+# ★ After Domain layer is confirmed (build + tests pass)
+
+Generate Domain unit tests using two dedicated sub-agents.
+
+---
+
+## Step 1 — Spawn `domain-test-planner`
+
+Spawn sub-agent:
+
+```
+domain-test-planner
+```
+
+Pass:
+
+- Paths of every Domain file created or modified
 - Module name (e.g. `Inventory`)
-- Path to the unit test directory: `tests/Pricing.<Module>.Domain.UnitTests/`
+- Output plan path:
 
-Do **not** wait for the sub-agent to finish before continuing to Contracts and Application.
+```
+tests/_plans/<Module>-domain-test-plan.md
+```
 
-When the sub-agent returns:
-1. Review its summary (files created, test count).
-2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
-3. Fix any compilation errors in the generated tests before proceeding.
-4. Check off `[ ] Unit tests — Domain` in the spec checklist.
+Wait for the planner to finish.
 
----
+If the planner fails or does not produce a valid plan:
 
-### ★ After Application layer is confirmed (compiles + tests pass)
+- stop the workflow
+- report the failure to the user
+- do NOT spawn `domain-test-writer`
 
-Spawn sub-agent **`application-test-writer`** in parallel while you begin the Infrastructure layer.
+Review the planner summary.
 
-Pass to the sub-agent:
-- Paths of all Application files created or modified in this spec (use cases)
-- Module name (e.g. `Inventory`)
-- Path to the unit test directory: `tests/Pricing.<Module>.Application.UnitTests/`
+If the planner reports blocking Coverage Gaps or ambiguous business rules:
 
-Do **not** wait for the sub-agent to finish before continuing to Infrastructure.
-
-When the sub-agent returns:
-1. Review its summary (files created, test count).
-2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
-3. Fix any compilation errors in the generated tests before proceeding.
-4. Check off `[ ] Unit tests — Application` in the spec checklist.
+- stop
+- ask the user how to proceed
+- do NOT spawn `domain-test-writer`
 
 ---
 
-### ★ After Infrastructure layer is confirmed (compiles + tests pass)
+## Step 2 — Spawn `domain-test-writer`
 
-Spawn sub-agent **`infrastructure-test-writer`** in parallel while you begin the Api layer.
+After the planner succeeds, spawn:
 
-Pass to the sub-agent:
-- Paths of all Infrastructure files created or modified in this spec (repositories, EF configurations)
-- Module name (e.g. `Inventory`)
-- Path to the integration test directory: `tests/Pricing.IntegrationTests/`
+```
+domain-test-writer
+```
 
-Do **not** wait for the sub-agent to finish before continuing to Api.
+Pass:
 
-When the sub-agent returns:
-1. Review its summary (files created, test count).
-2. Run `dotnet build Pricing.slnx` + `dotnet test Pricing.slnx` to include the new tests.
-3. Fix any compilation errors in the generated tests before proceeding.
-4. Check off `[ ] Integration tests — Infrastructure` in the spec checklist.
+- Path to the generated test plan
+- Module name
+- Unit test project path:
+
+```
+tests/Pricing.<Module>.Domain.UnitTests/
+```
+
+Do **not** pass Domain source files.
+
+The writer must treat the generated test plan as the only source of truth and mechanically implement every test case.
 
 ---
 
-### After all layers are complete
+## Continue implementation
 
-1. Run `dotnet test Pricing.slnx` one final time — all tests must pass (or pre-existing failures must be explicitly acknowledged).
+While the writer generates tests, continue implementing the **Contracts** layer.
 
-2. Spawn sub-agent **`spec-reviewer`**.
+Do not wait for the writer before beginning Contracts.
 
-   Pass to the sub-agent:
-   - Path to the spec file: `_specs/active/SPEC-NNN.md`
-   - Root path of the solution
+---
 
-   Wait for the reviewer to return before continuing.
+## After the writer finishes
 
-3. Display the reviewer's report to the user.
-   - If report says **NEEDS ATTENTION**: stop, show gaps, ask the user how to proceed.
-   - If report says **PASS**: continue to close-out steps below.
+Review the writer summary.
 
-4. Update spec status to `implemented`.
-5. Move file from `_specs/active/` to `_specs/done/`.
-6. Update `_specs/INDEX.md`.
-7. Confirm: **"SPEC-NNN implemented. All checklist items done."**
+Verify:
+
+- generated files
+- generated test count
+- TODO markers
+
+Confirm:
+
+```
+Generated tests = Plan cases − TODO cases
+```
+
+If the counts differ:
+
+- stop
+- fix generated tests before continuing
+
+Run:
+
+```
+dotnet build Pricing.slnx
+```
+
+Fix compilation errors:
+
+- fix generated tests first if possible
+- if tests expose real production defects, fix production code instead
+- never weaken assertions just to make build pass
+
+Run:
+
+```
+dotnet test Pricing.slnx
+```
+
+If failures are unrelated to this specification:
+
+- report them explicitly
+- ask user before continuing
+
+Update checklist:
+
+```
+[x] Unit tests — Domain
+```
+
+Report:
+
+- Domain completed
+- Domain tests completed
+- Contracts already in progress
+
+---
+
+# ★ After Application layer is confirmed (compiles + tests pass)
+
+Spawn sub-agent:
+
+```
+application-test-writer
+```
+
+while beginning Infrastructure.
+
+Pass:
+
+- Paths of modified Application files
+- Module name
+- Application unit test project path
+
+Do not wait for completion.
+
+When finished:
+
+1. Review generated files.
+2. Run:
+
+```
+dotnet build Pricing.slnx
+dotnet test Pricing.slnx
+```
+
+3. Fix issues.
+4. Check:
+
+```
+[x] Unit tests — Application
+```
+
+---
+
+# ★ After Infrastructure layer is confirmed (compiles + tests pass)
+
+Spawn sub-agent:
+
+```
+infrastructure-test-writer
+```
+
+while beginning Api.
+
+Pass:
+
+- Paths of modified Infrastructure files
+- Module name
+- Integration test project path
+
+Do not wait.
+
+When finished:
+
+1. Review generated files.
+2. Run:
+
+```
+dotnet build Pricing.slnx
+dotnet test Pricing.slnx
+```
+
+3. Fix issues.
+4. Check:
+
+```
+[x] Integration tests — Infrastructure
+```
+
+---
+
+# After all layers are complete
+
+Run final:
+
+```
+dotnet test Pricing.slnx
+```
+
+All tests must pass unless pre-existing failures were explicitly acknowledged.
+
+---
+
+## Run specification review
+
+Spawn:
+
+```
+spec-reviewer
+```
+
+Pass:
+
+- Specification path
+- Solution root
+
+Wait for completion.
+
+If result:
+
+```
+NEEDS ATTENTION
+```
+
+- stop
+- show issues
+- ask user how to proceed
+
+If result:
+
+```
+PASS
+```
+
+continue
+
+---
+
+## Close specification
+
+1. Mark:
+
+```
+implemented
+```
+
+2. Move:
+
+```
+_specs/active/
+→ _specs/done/
+```
+
+3. Update `_specs/INDEX.md`
+
+4. Confirm:
+
+> SPEC-NNN implemented. All checklist items completed.
 
 ---
 
 ## Rules
-- Follow CLAUDE.md architecture and conventions at all times
-- Each module has its own UnitOfWork interface (`I<Module>UnitOfWork`) — never inject `IUnitOfWork` directly
-- Modules communicate only through `*.Facade` — never reference another module's `*.Application` or `*.Domain`
-- If you hit an Open Question that blocks implementation, stop and ask the user
-- Never call `SaveChanges` inside a repository
-- Keep Api endpoints thin — delegate everything to the use case
-- Sub-agent tests are additive — never delete or modify existing tests to make them pass; fix production code instead
+
+- Follow `CLAUDE.md` architecture and conventions.
+- Each module has its own `I<Module>UnitOfWork` — never inject generic `IUnitOfWork`.
+- Modules communicate only via `*.Facade`.
+- Never reference another module’s Application or Domain.
+- Stop immediately if an Open Question blocks implementation.
+- Never call `SaveChanges()` inside repositories.
+- API must remain thin.
+- Application layer owns business logic.
+- Generated tests are additive only.
+- Never modify or delete existing tests to make them pass.
+- Fix production code instead.
