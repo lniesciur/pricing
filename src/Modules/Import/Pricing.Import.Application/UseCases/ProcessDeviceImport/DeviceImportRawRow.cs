@@ -7,4 +7,6 @@ public class DeviceImportRawRow
     public string TypeCode { get; set; } = string.Empty;
     public string? SubtypeCode { get; set; }
     public string? ManufacturerCode { get; set; }
+    public string? Color { get; set; }
+    public string? Memory { get; set; }
 }

@@ -103,12 +103,20 @@ public sealed class ProcessDeviceImportUseCase(
             }
 
             var ean = raw.EanCode.Trim();
+
+            var attributes = new List<DeviceAttributeDto>();
+            if (!string.IsNullOrWhiteSpace(raw.Color))
+                attributes.Add(new DeviceAttributeDto("Color", raw.Color.Trim()));
+            if (!string.IsNullOrWhiteSpace(raw.Memory))
+                attributes.Add(new DeviceAttributeDto("Memory", raw.Memory.Trim()));
+
             requests.Add(new RegisterDeviceRequest(
                 ean,
                 raw.Name.Trim(),
                 raw.TypeCode.Trim(),
                 string.IsNullOrWhiteSpace(raw.SubtypeCode) ? null : raw.SubtypeCode.Trim(),
-                string.IsNullOrWhiteSpace(raw.ManufacturerCode) ? null : raw.ManufacturerCode.Trim()));
+                string.IsNullOrWhiteSpace(raw.ManufacturerCode) ? null : raw.ManufacturerCode.Trim(),
+                attributes.Count > 0 ? attributes : null));
             eanToRowNumber[ean] = rowNumber;
         }
 
