@@ -48,7 +48,11 @@ public sealed class RegisterDevicesUseCase(
                 continue;
             }
 
-            devices.Add(Device.Create(request.EanCode, request.Name, request.TypeCode, request.SubtypeCode, request.ManufacturerCode));
+            var attributes = request.Attributes?
+                .Select(a => new DeviceAttribute(a.Name, a.Value))
+                .ToList();
+
+            devices.Add(Device.Create(request.EanCode, request.Name, request.TypeCode, request.SubtypeCode, request.ManufacturerCode, attributes));
         }
 
         return new DeviceValidationResult(devices, errors);

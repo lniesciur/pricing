@@ -35,5 +35,7 @@ public class DeviceConfiguration : IEntityTypeConfiguration<Device>
 
         builder.Property(d => d.ManufacturerCode)
             .HasMaxLength(50);
+
+        builder.OwnsMany(d => d.Attributes, b => b.ToJson());
     }
 }

@@ -1,0 +1,80 @@
+name: Deploy Infra
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy ARM template (dev)
+        id: arm-deploy
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: rg-pricing-dev
+          template: infra/azuredeploy.json
+          parameters: >
+            infra/azuredeploy.parameters.dev.json
+            sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Pricing.Api
+        run: dotnet publish src/Pricing.Api -c Release -o ./publish
+
+      - name: Deploy code to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ fromJson(steps.arm-deploy.outputs.deploymentOutputs).webAppName.value }}
+          package: ./publish
+
+  deploy-prod:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy ARM template (prod)
+        id: arm-deploy
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: rg-pricing-prod
+          template: infra/azuredeploy.json
+          parameters: >
+            infra/azuredeploy.parameters.prod.json
+            sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Pricing.Api
+        run: dotnet publish src/Pricing.Api -c Release -o ./publish
+
+      - name: Deploy code to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ fromJson(steps.arm-deploy.outputs.deploymentOutputs).webAppName.value }}
+          package: ./publish

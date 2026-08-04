@@ -57,3 +57,4 @@ tools/generated/
 .env.*
 appsettings.Development.json
 appsettings.Local.json
+infra/.local/

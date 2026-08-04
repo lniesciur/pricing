@@ -31,8 +31,10 @@ def ensure_openpyxl():
 DEVICE_TYPES = ["LAPTOP", "PHONE", "TABLET", "DESKTOP", "MONITOR"]
 SUBTYPES = ["", "GAMING", "BUSINESS", "ULTRABOOK", "CONVERTIBLE"]
 MANUFACTURERS = ["", "APPLE", "DELL", "LENOVO", "HP", "SAMSUNG"]
+COLORS = ["", "Black", "White", "Silver", "Blue", "Red"]
+MEMORY_SIZES = ["", "8GB", "16GB", "32GB", "64GB", "128GB"]
 
-COLUMNS = ["EanCode", "Name", "TypeCode", "SubtypeCode", "ManufacturerCode"]
+COLUMNS = ["EanCode", "Name", "TypeCode", "SubtypeCode", "ManufacturerCode", "Color", "Memory"]
 
 
 def build_rows(count: int) -> list[dict]:
@@ -44,6 +46,8 @@ def build_rows(count: int) -> list[dict]:
             "TypeCode": DEVICE_TYPES[i % len(DEVICE_TYPES)],
             "SubtypeCode": SUBTYPES[i % len(SUBTYPES)],
             "ManufacturerCode": MANUFACTURERS[i % len(MANUFACTURERS)],
+            "Color": COLORS[i % len(COLORS)],
+            "Memory": MEMORY_SIZES[i % len(MEMORY_SIZES)],
         })
     return rows
 

@@ -5,4 +5,5 @@ public record RegisterDeviceRequest(
     string Name,
     string TypeCode,
     string? SubtypeCode,
-    string? ManufacturerCode);
+    string? ManufacturerCode,
+    IReadOnlyList<DeviceAttributeDto>? Attributes = null);

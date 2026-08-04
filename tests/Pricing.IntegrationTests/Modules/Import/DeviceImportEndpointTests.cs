@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using MiniExcelLibs;
 using Pricing.Import.Contracts.DeviceImports;
@@ -12,6 +14,12 @@ namespace Pricing.IntegrationTests.Modules.Import;
 
 public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDisposable
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     private readonly HttpClient _client;
     private readonly ApiFactory _factory;
     private readonly List<Guid> _createdJobIds = [];
@@ -71,7 +79,8 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
         using var content = BuildCsvMultipart("e2e-valid.csv", csv);
 
         var uploadResponse = await _client.PostAsync("/api/import/device-imports", content);
-        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>();
+        Assert.Equal(HttpStatusCode.Accepted, uploadResponse.StatusCode);
+        var body = await uploadResponse.Content.ReadFromJsonAsync<UploadDeviceImportResponse>(JsonOptions);
         _createdJobIds.Add(body!.JobId);
 
         var job = await GetJobAsync(body.JobId);
@@ -141,7 +150,7 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
         var response = await _client.GetAsync($"/api/import/device-imports/{jobId}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<GetDeviceImportResponse>();
+        var body = await response.Content.ReadFromJsonAsync<GetDeviceImportResponse>(JsonOptions);
         Assert.NotNull(body);
         Assert.Equal(jobId, body.JobId);
         Assert.Equal("get-test.csv", body.FileName);
@@ -218,7 +227,7 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
     {
         var response = await _client.GetAsync($"/api/import/device-imports/{jobId}");
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<GetDeviceImportResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<GetDeviceImportResponse>(JsonOptions))!;
     }
 
     private static MultipartFormDataContent BuildCsvMultipart(string fileName, string csvContent)
