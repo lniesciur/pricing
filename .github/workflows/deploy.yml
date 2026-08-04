@@ -1,0 +1,50 @@
+name: Deploy Infra
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy ARM template (dev)
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: rg-pricing-dev
+          template: infra/azuredeploy.json
+          parameters: >
+            infra/azuredeploy.parameters.dev.json
+            sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+
+  deploy-prod:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy ARM template (prod)
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: rg-pricing-prod
+          template: infra/azuredeploy.json
+          parameters: >
+            infra/azuredeploy.parameters.prod.json
+            sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
