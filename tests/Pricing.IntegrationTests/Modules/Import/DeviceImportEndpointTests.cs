@@ -16,6 +16,7 @@ public class DeviceImportEndpointTests : IClassFixture<ApiFactory>, IAsyncDispos
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
+        PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
     };
 
