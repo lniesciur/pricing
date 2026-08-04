@@ -15,8 +15,10 @@ To ćwiczenie, nie production-ready IaC. Przed użyciem do realnego deploymentu 
 
 `.github/workflows/deploy.yml` deployuje na push do `main` (zmiany w `infra/**`) lub ręcznie (`workflow_dispatch`):
 
-1. `deploy-dev` — środowisko GitHub `dev`, deployuje do `rg-pricing-dev` bez zatrzymania.
-2. `deploy-prod` — środowisko GitHub `prod`, uruchamia się dopiero po sukcesie `deploy-dev` i **czeka na ręczną akceptację** (required reviewer skonfigurowany w Settings → Environments → prod).
+1. `deploy-dev` — środowisko GitHub `dev`: deployuje ARM template do `rg-pricing-dev`, potem buduje `Pricing.Api` (`dotnet publish`) i wgrywa go na powstały App Service. Bez zatrzymania.
+2. `deploy-prod` — środowisko GitHub `prod`, uruchamia się dopiero po sukcesie `deploy-dev` i **czeka na ręczną akceptację** (required reviewer skonfigurowany w Settings → Environments → prod), potem to samo (ARM + publish + deploy kodu) na `rg-pricing-prod`.
+
+Uwaga: trigger `paths: infra/**` odpala workflow tylko przy zmianach w `infra/`. Zmiana samego kodu API (`src/Pricing.Api/**` i moduły) **nie** wywoła automatycznego deployu — trzeba odpalić ręcznie (`workflow_dispatch` / `gh workflow run deploy.yml`), dopóki trigger nie zostanie rozszerzony.
 
 Sekrety `AZURE_CREDENTIALS` i `SQL_ADMIN_PASSWORD` są zdefiniowane osobno na poziomie każdego środowiska (dev/prod) — ta sama nazwa sekretu, różna wartość, izolacja między środowiskami.
 

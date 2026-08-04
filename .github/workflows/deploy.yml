@@ -20,6 +20,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy ARM template (dev)
+        id: arm-deploy
         uses: azure/arm-deploy@v2
         with:
           resourceGroupName: rg-pricing-dev
@@ -27,6 +28,20 @@ jobs:
           parameters: >
             infra/azuredeploy.parameters.dev.json
             sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Pricing.Api
+        run: dotnet publish src/Pricing.Api -c Release -o ./publish
+
+      - name: Deploy code to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ fromJson(steps.arm-deploy.outputs.deploymentOutputs).webAppName.value }}
+          package: ./publish
 
   deploy-prod:
     needs: deploy-dev
@@ -41,6 +56,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy ARM template (prod)
+        id: arm-deploy
         uses: azure/arm-deploy@v2
         with:
           resourceGroupName: rg-pricing-prod
@@ -48,3 +64,17 @@ jobs:
           parameters: >
             infra/azuredeploy.parameters.prod.json
             sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Pricing.Api
+        run: dotnet publish src/Pricing.Api -c Release -o ./publish
+
+      - name: Deploy code to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ fromJson(steps.arm-deploy.outputs.deploymentOutputs).webAppName.value }}
+          package: ./publish

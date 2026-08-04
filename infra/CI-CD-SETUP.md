@@ -16,6 +16,12 @@ az group create --name rg-pricing-prod --location westeurope
 
 ## 2. Service Principals — jeden per środowisko (least privilege)
 
+**Czym jest Service Principal:** "konto techniczne" w Azure AD — tożsamość dla aplikacji/skryptu (nie dla człowieka), którą Azure traktuje jak zwykłego użytkownika przy autoryzacji: ma swój `clientId`, `clientSecret` (albo certyfikat) i można mu przypisać role (np. `Contributor`) na konkretnym zasobie/resource group.
+
+Po co, skoro `az` jest już zalogowane Twoim osobistym kontem:
+- Nie chcesz logować CI Twoim osobistym kontem — nie ma tam MFA/interaktywnego logowania, a Twoje konto ma pełny dostęp do całej subskrypcji, nie tylko do jednej resource group.
+- SP daje ograniczony, dedykowany dostęp — `--scopes .../resourceGroups/rg-pricing-dev` tworzy tożsamość, która fizycznie widzi *tylko* tę jedną resource group. Jeśli sekret wycieknie z GitHub Actions, szkoda jest ograniczona do jednej RG, nie do całej subskrypcji.
+
 Osobny SP na dev i prod, każdy ograniczony `--scopes` tylko do swojej resource group — SP od deployu na dev fizycznie nie ma dostępu do prod, nawet gdyby wyciekł.
 
 ```bash

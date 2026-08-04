@@ -141,6 +141,10 @@
       "type": "string",
       "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('webAppName'))).defaultHostName)]"
     },
+    "webAppName": {
+      "type": "string",
+      "value": "[variables('webAppName')]"
+    },
     "sqlServerFqdn": {
       "type": "string",
       "value": "[variables('sqlServerFqdn')]"
